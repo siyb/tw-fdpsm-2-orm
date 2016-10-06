@@ -55,7 +55,7 @@
    * The mapping can be established automatically …
    * … or manually
 * The use of DAOs (Data Access Objects) to abstract database access
-* Some languages (like Java) feature APIs that can be used to implement ORMs (JPI – Java Persistence API)
+* Some languages (like Java) feature APIs that can be used to implement ORMs (JPA – Java Persistence API)
 
 ## ORM / ORM Concepts - 3 - Pattern: ActiveRecord
 
