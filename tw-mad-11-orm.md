@@ -321,6 +321,7 @@ private Article querySampleArticle() {
 ## sugarorm - 2 - Example: Manifest
 
 * First of all, we need adjust our manifest
+
 ```xml
 <!-- declare com.orm.SugarApp or
 inheriting classes as application -->
@@ -395,6 +396,10 @@ public MyOtherEntity getMyOtherEntity() {
 
 ## Outlook - 1 - More Android ORMs
 
+* ActiveAndroid
+    * Designed for Android
+    * Similar to what sugarorm does
+    * Very promising!
 * ORMLight - http://ormlite.com/
     * Supports Android, is not made for Android
 * androrm - http://androrm.com/
