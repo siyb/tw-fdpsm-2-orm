@@ -100,15 +100,7 @@
         * e.g. JPA criteria queries
     * Alternatively (or in addition), ORMs might provide builders that can be used to create queries, either by using the DAO directly and/or by providing dedicated query builder classes
 
-## ORM / ORM Concepts - 8 - Writing
-
-* Usually, inserting and updating records is accomplished using DAOs
-    * An Object is queried from the data base
-    * Changes are made using provided setter methods
-    * The Object is inserted or updated depending on the programmers need
-    * Beware, references might not be inserted / updated automatically, when inserting / updating an Object!
-
-## ORM / ORM Concepts - 9 - Shortcomings / Criticism
+## ORM / ORM Concepts - 8 - Shortcomings / Criticism
 
 * ORMs are a mere abstraction of the relational database
     * Object Orientation != Relational, mapping causes issues!
