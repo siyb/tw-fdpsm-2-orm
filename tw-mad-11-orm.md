@@ -27,7 +27,7 @@
     * greenDAO
     * sugarorm
 * Both Frameworks provide ORM functionality, but
-    * greenDAO is more advanced (30.09.2015)
+    * greenDAO is more advanced (06.10.2016)
     * they use different approaches to implement ORM functionality
     * I personally like the greenDAO approach more, but sugar has its architectural gems
 
