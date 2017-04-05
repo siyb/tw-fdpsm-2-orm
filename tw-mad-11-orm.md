@@ -18,18 +18,6 @@
 * Outlook
     * alternatives (ORM / Databases)
 
-# Introduction
-
-## Introduction - 1 - About the slides
-
-* We will be looking at two different frameworks today
-    * greenDAO
-    * sugarorm
-* Both Frameworks provide ORM functionality, but
-    * greenDAO is more advanced (06.10.2016)
-    * they use different approaches to implement ORM functionality
-    * I personally like the greenDAO approach more, but sugar has its architectural gems
-
 # ORM / ORM Concepts
 
 ## ORM / ORM Concepts - 1 - General Information
@@ -120,7 +108,7 @@
 * greenDAO is an ORM which was written for Android
     * Therefore, it currently only supports SQLite (and I personally doubt that support for other databases will be added in the near future)
 * As most Android related open source projects, greenDAO is licensed under the terms of the Apache License 2.0
-* greenDAO uses the Data Mapper pattern
+* greenDAO uses the Data Mapper pattern and the active record pattern!
 
 ## greenDAO - 2 - Introduction cont.
 
@@ -138,101 +126,135 @@
 
 ## greenDAO - 4 - Getting Started
 
-* greenDAO consists of two .jar files
-    * The Android library: `compile 'de.greenrobot:greendao:2.0.0'`
-    * The Generator library: `compile 'de.greenrobot:greendao-generator:2.0.0'`
-* greenDAO uses the freemarker templating engine to generate code
+* greenDAO consists of two components
+    * the greenDAO gradle plugin, which generates code
+    * the greenDAO library, which is used by your appliction
 
 ## greenDAO - 5 - Getting Started cont.
 
-* In order to use greeDAO, we need to create two separate projects:
-* Generator project
-    * The generator project is a standard Java project
-    * It uses the greendao-generator-NNN.jar 
-    * It takes care of generating source files (the data access layer) for our Android project
-    * We need to define a database schema using Java code
-    * Every time something changes, we need to rerun the generator project in order to recreate the source files
-    * We can automate this process (ANT, Maven, etc)
+* Add the following dependency to your module:
 
-## greenDAO - 6 - Getting Started cont.
+    ```compile 'org.greenrobot:greendao:3.2.2'```
 
-* Android project:
-    * Uses the greendao-NNN.jar
-    * Should contain a source directory that is only used by greenDAO (e.g.): src/ -> src-greendao/
-    * Every time the generator project is executed, .java files are generated and written to the specified folder
-    * You need to refresh / rebuild once new .java files have been created
-    * The Android project uses the generated .java files to access the database
+* Add the following apply directive to your module:
 
-## greenDAO - 5 - Example: Schema
+    ```apply plugin: 'org.greenrobot.greendao'```
+
+* Add the following dependency to your project build file:
+
+    ```classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2'```
+
+## greenDAO - 6 - Schema Metadata
+
+* You can supply schema specific information using the module build file
+    * schemaVersion - schema version, must be increased by 1 if schema changes, used by internal helper calls
+    * daoPackage - optional: define an output package for the daos (defaults to source package)
+    * targetGenDir - optional: define an output path for generated code (defaults to build/generated/source/greendao)
+    * generateTests - optional: generate test cases, boolean (defaults to false)
+    * targetGenDirTests - optional: generation path for test cases (defaults to src/androidTest/java)
+
+## greenDAO - 7 - Schema Metadata cont.
+
+```
+greendao {
+    schemaVersion 1
+    daoPackage example.test.org
+    targetGenDir /my/custom/dir/
+    generateTests true
+    targetGenDirTests /my/custom/test/dir
+}
+```
+## greenDAO - 8 - Entity Modelling: Basics
+
+* greenDAO uses annotations that are similar to what we know from JPA
+* Make sure to use the correct annotations (IMPORTS!)
+* @Entity - use this annotation on classes to mark them entities
+    * Supports multiple options, remarkably, "active" can be used to add active record methods to the entity.
+    * Can be used to add additional indecies
+* @Id
+    * Use this annotation to denote a PK field
+    * Support autoincrement, no reuse of "old" IDs
+* @NotNull
+    * Use this annotation to add a NOT NULL constraint to a field
+* @Property
+    * May be used to define non default column names
+* @Unique
+    * UNIQUE constraint
+
+## greenDAO - 9 - Example
 
 ```java
-public class MyGenerator throws Throwable { 
-  private static final int SCHEMA_VERSION = 1; 
-  private Schema schema = new Schema(SCHEMA_VERSION,
-    "my.greendao.example"
-  ); 
-  private void generateSchema() {
-    Entity article = schema.addEntity("Article"); 
-    article.addIdProperty(); 
-    article.addBooleanProperty("read"); 
-    article.addStringProperty("title").notNull(); 
-    article.addStringProperty("description"); 
-    article.addDateProperty("created"); 
-    new DaoGenerator().generateAll(schema, "../path"); 
-  }
-  public static void main(String[] args) { 
-    new MyGenerator().generateSchema(); 
-  } 
-} 
+@Entity
+public class Product {
+  @Id
+  private Long id;
+
+  @NotNull
+  @Unique
+  private String name;
+  
+}
 ```
 
-## greenDAO - 5 - Example: Schema Relationships
+## greenDAO - 9 - Entity Modelling: Relations
+
+* As with basic schema definition, greeDAO uses annotations to add relations to your model
+* @ToOne - to one relationship, on an Object
+* @ToMany - to many relationship, on a List
+    * Multually exclusive ways to create the mapping:
+    * referencedJoinProperty: defines the FK in the target entity
+    * joinProperties: link via properties in models
+    * @JoinEntity: creates a join table
+        * entity: class reference to entity that is used for joining
+        * sourceProperty / targetProperty: source / target FK properties
+    * Due to caching limitations, to many related entities must be manually added / removed from the database and the relating entity
+
+## greenDAO - ? - Example
 
 ```java
-Property feedId = article.addLongProperty("feedid")
-    .getProperty(); 
-Entity feed = schema.addEntity("Feed"); 
-feed.addIdProperty(); 
-feed.addStringProperty("title").notNull();
-article.addToOne(feed, feedId);
+@Entity public class Product {
+  @Id
+  private Long id;
+}
+@Entity public class Order {
+  @Id
+  private Long id;
+  @ToMany
+  @JoinEntity(entity = OrderProducts.class, 
+    sourceProperty = productId, targetProperty = orderId)
+  private List<Product> products;
+}
+@Entity public class OrderProduct {
+  @Id
+  private Long id;
+  private Long productId;
+  private Long orderId;
+}
 ```
 
-## greenDAO - 6 - Relationships Explained
+## greenDAO - 10 - Bidirectional Relationships
 
-* Entities that wish to define relations have to define a field that corresponds to the relation
-* In our case, article defines a field feedId to store the reference
-* We need to set the relation, in our case to-one for our entity manually, to do this:
-    * We need to provide the Entity to which we want to have a relation to
-    * We need to provide a field that stores a reference (i.e. the id)
-* Running this code will generate a lazy getFeed() method in our Article DAO (this method returns the Feed Object and not its id!)
-* If we want to create more complex relations (n:m for instance) we have to create a to-many relation from Article to Feed and a to-many relation from Feed to Article
+* You can model Bidirectional relationships using @ToOne / @ToMany
+* Those relations are not linked with each other, you need to update them manually, even if an Order *has many* Products and a Product *has many* Orders, greenDAO does not understand the semantics of this relation and thus, you need to add the Order to the Product and the Product to the Order manually
+* This is also true for other relational combinations
 
-## greenDAO - 6 - Additional Schema Features
+## greenDAO - 11 - Code Generation
 
-* There are many other options we cannot cover in our lecture, please refer to:
-    * [more complex relations](http://greendao-orm.com/documentation/relations/)
-    * [additional features like inheritance](http://greendao-orm.com/documentation/modelling-entities/)
-    * Please note that n:m relations are not directly supported, you need to implement the join table manually and adjust relations accordingly
+* greenDAO will generate code in the specified directory:
+    * DaoMaster
+    * DaoSession
+    * $(Entity)Dao
+* it will also generate code within your entity class
+   * it will not delete your code in order to do that
+   * it annotates generated code with the @Generated annotation ...
+   * ... if you edit generated code, replace the @Generated annotation with the @Keep annotation to allow recompilation
 
-## greenDAO - 7 - Working With Data
-
-* Now it’s time to run the generator project to create the glue / boilerplate code that we can use to access the database
-* greenDAO creates two artifacts for each Entity
-    * A data object that holds the actually data (e.g. Article)
-    * A DAO object that is used to execute Entity specific operations on the database (e.g. ArticleDAO)
-* But first, we have to create the database ;)
-
-```java
-new DaoMaster.DevOpenHelper(this, "test-db", null);
-```
-
-## greenDAO - 8 - Initializing DaoMaster / DaoSession
+## greenDAO - 8 - Initializing Database / DaoMaster / DaoSession
 
 ```java
 private DaoMaster daoMaster; 
 private DaoSession daoSession; 
-private ArticleDao articleDao; 
-private FeedDao feedDao; 
+private ProductDao productDao; 
 
 private void initDatabaseAccess() { 
   SQLiteDatabase db = new DaoMaster
@@ -240,8 +262,7 @@ private void initDatabaseAccess() {
     .getWritableDatabase(); 
   daoMaster = new DaoMaster(db); 
   daoSession = daoMaster.newSession(); 
-  articleDao = daoSession.getArticleDao(); 
-  feedDao = daoSession.getFeedDao();
+  productDao = daoSession.getProductDao();
 } 
 ```
 
