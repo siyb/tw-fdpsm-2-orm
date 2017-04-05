@@ -15,7 +15,6 @@
 * Introduction
 * ORM / ORM Concepts
 * greenDAO
-* sugarorm
 * Outlook
     * alternatives (ORM / Databases)
 
@@ -297,94 +296,6 @@ private Article querySampleArticle() {
 * joins are finally supported as well \o/
 
 # [Example Code](https://github.com/SphericalElephant/android-example-greendao)
-
-# sugarorm
-
-## sugarorm - 1 - Introduction
-
-* Can be obtained from [http://satyan.github.io/sugar/](http://satyan.github.io/sugar/)
-* Designed for Android
-* Not as advanced as greenDAO
-* Does not work by generating code or using reflections but by inheritance
-* Does not support 1:n or m:n relations out of the box, has to be manually implemented -.-
-* Does not provide a "DSL" like greenDAO does, more crude queries
-* Implements the ActiveRecord pattern
-
-## sugarorm - 2 - Example: Manifest
-
-* First of all, we need adjust our manifest
-
-```xml
-<!-- declare com.orm.SugarApp or
-inheriting classes as application -->
-<application android:name="com.orm.SugarApp">
-<!-- the name of our database -->
-<meta-data android:name="DATABASE"
-android:value="sugardb-example.db"/>
-<!-- our database schema version -->
-<meta-data android:name="VERSION"
-android:value="1"/>
-<!-- write select queries to log (debugging) -->
-<meta-data android:name="QUERY_LOG"
-android:value="true"/>
-<!-- the location of our entities,
-sugar will take care of the rest -->
-<meta-data 
-android:name="DOMAIN_PACKAGE_NAME"
-android:value="com.sphericalelephant.example.sugarorm.entity"/>
-</application>
-```
-
-## sugarorm - 3 - Example: Model
-
-```java
-public class MyEntity extends SugarRecord<MyEntity> {
-  private String myString;
-  private int myInt;
-  private Date myDate;
-  private List<String>
-    youWouldThinkThisWorksButItDoesnt;
-}
-```
-
-## sugarorm - 4 - Example: Saving Entity
-
-```java
-MyEntity me = new MyEntity();
-me.setMyString("Test");
-me.setMyInt(1);
-me.setMyDate(new Date());
-me.save(); // me.delete();
-```
-
-## sugarorm - 5 - Example: Query Data
-
-* supports additional find methods, autocomplete is your friend
-
-```java
-List<MyEntity> p = 
-  MyEntity.find(
-    MyEntity.class,
-    "myString = ?", "woot!"
-  );
-```
-
-## sugarorm - 6 - Example: 1:n
-
-* Example for 1:n
-
-```java
-public MyOtherEntity getMyOtherEntity() {
-  return MyOtherEntity.find(
-    MyOtherEntity.class,
-    "myEntity = ?", new String{getId()}
-  );
-}
-```
-
-# [Example Code](https://github.com/SphericalElephant/android-example-sugarorm)
-
-# Outlook
 
 ## Outlook - 1 - More Android ORMs
 
