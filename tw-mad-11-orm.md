@@ -7,7 +7,6 @@
 * Any issues with this presentation? Write a ticket or send me a pull request ;).
 * Repo: [https://github.com/siyb/tw-mad-11-orm](https://github.com/siyb/tw-mad-11-orm)
 
-
 # Agenda
 
 ## Agenda
@@ -34,13 +33,13 @@
 ## ORM / ORM Concepts - 2 - Mapping Data
 
 * ORM provides mappings between Object Oriented programming languages and Relational Databases
-   * One-to-One 1:1
-   * One-to-Many 1:n
-   * Many-to-Many n:m
-   * Others (e.g. difference between hasOne - composition and belongsTo - aggregation)
+    * One-to-One 1:1
+    * One-to-Many 1:n
+    * Many-to-Many n:m
+    * Others (e.g. difference between hasOne - composition and belongsTo - aggregation)
 * In order to establish the mapping, tables are “translated” to Objects
-   * The mapping can be established automatically …
-   * … or manually
+    * The mapping can be established automatically …
+    * … or manually
 * The use of DAOs (Data Access Objects) to abstract database access
 * Some languages (like Java) feature APIs that can be used to implement ORMs (JPA – Java Persistence API)
 
@@ -51,14 +50,14 @@
 * The Class contains methods to find instances as well
 * Adds other domain logic
 * => SRP? Not so much, data and logic are mixed!
-* Example: Ruby On Rails ORM
+* Example: Sequlize, ActiveRecord (Rails), loopback ORM
 
 ## ORM / ORM Concepts - 4 - Pattern: Data Mapper
 
 * Data Object and Database are separated
 * Responsibilities are clearly defined
 * Save / update / delete / find are not part of the entity
-* Example: Hibernate / JPA - EntityManager
+* Example: Hibernate / JPA - EntityManager, SQL Alchemy
 
 ## ORM / ORM Concepts - 5 - Lazy Loading
 
@@ -128,7 +127,7 @@
 
 * greenDAO consists of two components
     * the greenDAO gradle plugin, which generates code
-    * the greenDAO library, which is used by your appliction
+    * the greenDAO library, which is used by your application
 
 ## greenDAO - 5 - Getting Started cont.
 
@@ -196,7 +195,7 @@ public class Product {
 }
 ```
 
-## greenDAO - 9 - Entity Modelling: Relations
+## greenDAO - 10 - Entity Modelling: Relations
 
 * As with basic schema definition, greeDAO uses annotations to add relations to your model
 * @ToOne - to one relationship, on an Object
@@ -207,9 +206,8 @@ public class Product {
     * @JoinEntity: creates a join table
         * entity: class reference to entity that is used for joining
         * sourceProperty / targetProperty: source / target FK properties
-    * Due to caching limitations, to many related entities must be manually added / removed from the database and the relating entity
 
-## greenDAO - ? - Example
+## greenDAO - 11 - Example
 
 ```java
 @Entity public class Product {
@@ -221,7 +219,7 @@ public class Product {
   private Long id;
   @ToMany
   @JoinEntity(entity = OrderProducts.class, 
-    sourceProperty = productId, targetProperty = orderId)
+    sourceProperty = "productId", targetProperty = "orderId")
   private List<Product> products;
 }
 @Entity public class OrderProduct {
@@ -232,24 +230,25 @@ public class Product {
 }
 ```
 
-## greenDAO - 10 - Bidirectional Relationships
+## greenDAO - 12 - Bidirectional Relationships
 
 * You can model Bidirectional relationships using @ToOne / @ToMany
 * Those relations are not linked with each other, you need to update them manually, even if an Order *has many* Products and a Product *has many* Orders, greenDAO does not understand the semantics of this relation and thus, you need to add the Order to the Product and the Product to the Order manually
 * This is also true for other relational combinations
 
-## greenDAO - 11 - Code Generation
+## greenDAO - 13 - Code Generation
 
 * greenDAO will generate code in the specified directory:
     * DaoMaster
     * DaoSession
     * $(Entity)Dao
+* The DaoSession can be used to work with all entities, the $(Entity)Daos are specialized on a per entity basis
 * it will also generate code within your entity class
-   * it will not delete your code in order to do that
-   * it annotates generated code with the @Generated annotation ...
-   * ... if you edit generated code, replace the @Generated annotation with the @Keep annotation to allow recompilation
+    * it will not delete your code in order to do that
+    * it annotates generated code with the @Generated annotation ...
+    * ... if you edit generated code, replace the @Generated annotation with the @Keep annotation to allow recompilation
 
-## greenDAO - 8 - Initializing Database / DaoMaster / DaoSession
+## greenDAO - 14 - Initializing Database / DaoMaster / DaoSession
 
 ```java
 private DaoMaster daoMaster; 
@@ -258,7 +257,7 @@ private ProductDao productDao;
 
 private void initDatabaseAccess() { 
   SQLiteDatabase db = new DaoMaster
-    .DevOpenHelper(this, "notes-db", null) 
+    .DevOpenHelper(this, "orders", null) 
     .getWritableDatabase(); 
   daoMaster = new DaoMaster(db); 
   daoSession = daoMaster.newSession(); 
@@ -266,57 +265,68 @@ private void initDatabaseAccess() {
 } 
 ```
 
-## greenDAO - 9 - Inserting Data
+## greenDAO - 15 - Inserting Data
 
 ```java
-private void createSampleArticle() { 
-  Feed f = new Feed(); 
-  f.setTitle("Awesome Tech Site"); 
-  feedDao.insert(f); 
+Product p = new Product();
+p.setName("test");
 
-  Article a = new Article(); 
-  a.setTitle("Wow, nice title dude"); 
-  a.setDescription("This is a fine article..."); 
-  a.setRead(false); 
-  a.setCreated(new Date()); 
-  a.setFeed(f); 
-  articleDao.insert(a); 
-}
+Order o = new Order();
+o.setName("Default Order");
+daoSession.insert(o);
+
+o.getProducts().add(p);
+
 ```
 
-## greenDAO - 10 - More Write Operations
+## greenDAO - 16 - More Write Operations
 
 * The Entity DAOs feature multiple methods to interact with the Entity on the database level
     * insert(Entity)
     * update(Entity)
     * delete(Entity)
     * dropTable(…)
+* Please note that entities themselves have access to active methods such as: refresh, update and delete (if @Entity(active = ...) is not false)
 * In addition, they feature methods to execute CRUD operations within a transaction, e.g. deleteInTx(Entity)
 * On top of all that, they facilitate query creation (both raw and ORM query) and they provide table and Entity meta data
 * You can check all that stuff out yourself ;)
 
-## greenDAO - 11 - Query Data
+## greenDAO - 17 - Query Data
+
+* The following example returns a list of Orders named "Default Order"
 
 ```java
-private Article querySampleArticle() {
-  QueryBuilder<Article> builder = articleDao.queryBuilder();
-  builder.where(
-    Properties.Title.eq("Wow, nice title dude"));
-      builder.and(
-        Properties.Description.eq(
-          "This is a fine article..."), 
-        Properties.Read.eq(false));
-  List<Article> articles = builder.list();
+private Order queryOrder() {
+  List<Order> orders = orderDao
+    .queryBuilder()
+    .where(OrderDao.Properties.Name.eq("Default Order"))
+    .and(OrderDao.Properties.OtherProperty.isNotNull())
+    .build()
+    .list();
 }
 ```
 
-## greenDAO - 12 - More On Querying
+## greenDAO - 18 - Query Data cont.
+
+* This example returns a single order with the name "Default Order" via the daoSession and not the orderDao!
+
+```java
+Order order = daoSession
+  .queryBuilder(Order.class)
+  .where(OrderDao.Properties.Name.eq("Default Order"))
+  .build()
+  .unique();
+```
+
+## greenDAO - 19 - More On Querying
 
 * Instead of using builder.list(), you may also use listLazy() which must be manually closed due to the nature of the implementation (use listLazy().close() when you are done)
 * listLazy() is probably the best way to query data that needs to be displayed in an Android list
 * joins are finally supported as well \o/
+* http://greenrobot.org/greendao/documentation/queries/
+* http://greenrobot.org/greendao/documentation/joins/
 
-# [Example Code](https://github.com/SphericalElephant/android-example-greendao)
+# [Example Code](https://github.com/SphericalElephant/android-example-greendao3)
 
 ## Outlook - 1 - More Android ORMs
 
@@ -330,19 +340,5 @@ private Article querySampleArticle() {
     * Designed for Android
     * Uses inheritance instead of generation
 * Some more, use Google if you hadn’t enough ;)
-
-## Outlook - 2 - Alternatives to ORM 
-
-* NoSQL
-    * Does not mean “NO!” SQL but Not Only SQL
-    * But more often than not, NoSQL contains NO SQL ;)
-* Possible NoSQL solutions on Android
-* Berkeley DB
-    * Key / Value store
-* CouchDB
-    * Document store
-    * JSON API
-* UnQLite
-    * Key / Value store, Document store
 
 # Any Questions?
