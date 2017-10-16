@@ -1,6 +1,6 @@
 % MAD - Android 11: Android ORMs
 % Patrick Sturm
-% 05.04.2017
+% 16.10.2017
 
 ## Information
 
