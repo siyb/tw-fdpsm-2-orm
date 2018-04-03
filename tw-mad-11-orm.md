@@ -1,6 +1,6 @@
 % MAD - Android 11: Android ORMs
 % Patrick Sturm
-% 16.10.2017
+% 04.04.2018
 
 ## Information
 
@@ -14,8 +14,7 @@
 * Introduction
 * ORM / ORM Concepts
 * greenDAO
-* Outlook
-    * alternatives (ORM / Databases)
+* Alternatives
 
 # ORM / ORM Concepts
 
@@ -50,7 +49,7 @@
 * The Class contains methods to find instances as well
 * Adds other domain logic
 * => SRP? Not so much, data and logic are mixed!
-* Example: Sequlize, ActiveRecord (Rails), loopback ORM
+* Example: Sequlize, ActiveRecord (Rails), ActiveAndroid
 
 ## ORM / ORM Concepts - 4 - Pattern: Data Mapper
 
@@ -64,14 +63,14 @@
 * Most ORMs support lazy loading for different data types, e.g.:
     * A LazyList<Car> will not contain all cars queried from the database, each individual Car’s data will be queried once it is accessed
     * Relations of the Car might also be loaded lazily, i.e. when the program tries to access it
-* Lazy loading is very important on mobile devices, since memory is limited!
+* Lazy loading is very important on mobile devices, since memory is limited.
 
 ## ORM / ORM Concepts - 6 - Data Model Generation
 
 * ORMs can be used on existing databases – more work
 * The best idea is to let the ORM create and manage the database accordingly
-    * Adds another layer of abstraction, you don’t have any direct control over what the database will look like …
-    * … but you can make a good assumption about tables (e.g. join tables)
+    * Adds another layer of abstraction, you don’t necessarily have direct control over what the database will look like …
+    * … but you can make a good assumption about tables (e.g. join tables, data types, etc)
 * As stated above, the ORM will take care of managing the database
     * New tables
     * Database updates if new data types are added
@@ -80,7 +79,7 @@
 ## ORM / ORM Concepts - 7 - Queries
 
 * Simple Queries are easily executed – in most cases, there is no need to write SQL queries by hand, but …
-    * ORMs generally support writing of SQL statements
+    * ORMs generally support writing and executing SQL statements
     * In addition to SQL, ORMs often support so called DSLs (Domain Specific Language) that allow more complex database operations
     * These DSLs may have a completely different syntax than the programming language / query language you are actually working with
         * e.g. JPA criteria queries
@@ -89,7 +88,7 @@
 ## ORM / ORM Concepts - 8 - Shortcomings / Criticism
 
 * ORMs are a mere abstraction of the relational database
-    * Object Orientation != Relational, mapping causes issues!
+    * Object Orientation != Relational, mapping causes issues.
     * They introduce another layer of complexity
     * Even though this new layer of complexity is not a black box (in almost all cases), debugging can still be tedious, if the problem is situated within the guts of the ORM
 * ORMs can be slow
@@ -97,7 +96,8 @@
 * ORMs may hide functionality
     * -> Abstraction
     * Data types get abstracted, there is no way one can match all OOP data types to corresponding database types (especially with SQLite)
-    * A list of additional reasons why mapping a relation database model to an OOP object model has some shortcomings (from a software engineering perspective) can be found [here](://en.wikipedia.org/wiki/Object-relational_impedance_mismatchhttp)
+        * [Type Affinity](https://www.sqlite.org/datatype3.html)
+    * A list of additional reasons why mapping a relation database model to an OOP object model has some shortcomings (from a software engineering perspective) can be found [here](http://en.wikipedia.org/wiki/Object-relational_impedance_mismatch)
 
 # greenDAO
 
@@ -107,7 +107,7 @@
 * greenDAO is an ORM which was written for Android
     * Therefore, it currently only supports SQLite (and I personally doubt that support for other databases will be added in the near future)
 * As most Android related open source projects, greenDAO is licensed under the terms of the Apache License 2.0
-* greenDAO uses the Data Mapper pattern and the active record pattern!
+* greenDAO uses the Data Mapper pattern and may be configured to use a quasi active record pattern.
 
 ## greenDAO - 2 - Introduction cont.
 
@@ -163,24 +163,30 @@ greendao {
     targetGenDirTests /my/custom/test/dir
 }
 ```
+
 ## greenDAO - 8 - Entity Modelling: Basics
 
 * greenDAO uses annotations that are similar to what we know from JPA
 * Make sure to use the correct annotations (IMPORTS!)
 * @Entity - use this annotation on classes to mark them entities
-    * Supports multiple options, remarkably, "active" can be used to add active record methods to the entity.
+    * Supports multiple options, notably, "active" can be used to add active record methods to the entity.
     * Can be used to add additional indecies
 * @Id
     * Use this annotation to denote a PK field
-    * Support autoincrement, no reuse of "old" IDs
+    * Supports autoincrement
 * @NotNull
     * Use this annotation to add a NOT NULL constraint to a field
+
+## greenDAO - 9 - Entity Modelling: Basics cont.
+
 * @Property
     * May be used to define non default column names
 * @Unique
     * UNIQUE constraint
+* @Index
+    * Creates an index for a column
 
-## greenDAO - 9 - Example
+## greenDAO - 10 - Example
 
 ```java
 @Entity
@@ -191,23 +197,22 @@ public class Product {
   @NotNull
   @Unique
   private String name;
-  
 }
 ```
 
-## greenDAO - 10 - Entity Modelling: Relations
+## greenDAO - 11 - Entity Modelling: Relations
 
 * As with basic schema definition, greeDAO uses annotations to add relations to your model
 * @ToOne - to one relationship, on an Object
 * @ToMany - to many relationship, on a List
-    * Multually exclusive ways to create the mapping:
+    * Mutually exclusive ways to create the mapping:
     * referencedJoinProperty: defines the FK in the target entity
     * joinProperties: link via properties in models
     * @JoinEntity: creates a join table
         * entity: class reference to entity that is used for joining
         * sourceProperty / targetProperty: source / target FK properties
 
-## greenDAO - 11 - Example
+## greenDAO - 12 - Example
 
 ```java
 @Entity public class Product {
@@ -230,13 +235,13 @@ public class Product {
 }
 ```
 
-## greenDAO - 12 - Bidirectional Relationships
+## greenDAO - 13 - Bidirectional Relationships
 
 * You can model Bidirectional relationships using @ToOne / @ToMany
 * Those relations are not linked with each other, you need to update them manually, even if an Order *has many* Products and a Product *has many* Orders, greenDAO does not understand the semantics of this relation and thus, you need to add the Order to the Product and the Product to the Order manually
 * This is also true for other relational combinations
 
-## greenDAO - 13 - Code Generation
+## greenDAO - 14 - Code Generation
 
 * greenDAO will generate code in the specified directory:
     * DaoMaster
@@ -248,7 +253,7 @@ public class Product {
     * it annotates generated code with the @Generated annotation ...
     * ... if you edit generated code, replace the @Generated annotation with the @Keep annotation to allow recompilation
 
-## greenDAO - 14 - Initializing Database / DaoMaster / DaoSession
+## greenDAO - 15 - Initializing Database / DaoMaster / DaoSession
 
 ```java
 private DaoMaster daoMaster; 
@@ -265,7 +270,7 @@ private void initDatabaseAccess() {
 } 
 ```
 
-## greenDAO - 15 - Inserting Data
+## greenDAO - 16 - Inserting Data
 
 ```java
 Product p = new Product();
@@ -276,10 +281,9 @@ o.setName("Default Order");
 daoSession.insert(o);
 
 o.getProducts().add(p);
-
 ```
 
-## greenDAO - 16 - More Write Operations
+## greenDAO - 17 - More Write Operations
 
 * The Entity DAOs feature multiple methods to interact with the Entity on the database level
     * insert(Entity)
@@ -289,56 +293,79 @@ o.getProducts().add(p);
 * Please note that entities themselves have access to active methods such as: refresh, update and delete (if @Entity(active = ...) is not false)
 * In addition, they feature methods to execute CRUD operations within a transaction, e.g. deleteInTx(Entity)
 * On top of all that, they facilitate query creation (both raw and ORM query) and they provide table and Entity meta data
-* You can check all that stuff out yourself ;)
 
-## greenDAO - 17 - Query Data
+## greenDAO - 18 - Query Data
 
 * The following example returns a list of Orders named "Default Order"
 
 ```java
-private Order queryOrder() {
   List<Order> orders = orderDao
     .queryBuilder()
     .where(OrderDao.Properties.Name.eq("Default Order"))
     .and(OrderDao.Properties.OtherProperty.isNotNull())
     .build()
     .list();
-}
 ```
 
-## greenDAO - 18 - Query Data cont.
+## greenDAO - 19 - Query Data cont.
 
 * This example returns a single order with the name "Default Order" via the daoSession and not the orderDao!
 
 ```java
-Order order = daoSession
-  .queryBuilder(Order.class)
-  .where(OrderDao.Properties.Name.eq("Default Order"))
-  .build()
-  .unique();
+  Order order = orderDao
+    .queryBuilder()
+    .where(OrderDao.Properties.Name.eq("Default Order"))
+    .build()
+    .unique();
 ```
 
-## greenDAO - 19 - More On Querying
+## greenDAO - 20 - Joins
+
+* greenDAO supports JOIN queries
+    * you can join a single table or chain multiple joins together
+    * chaining API is a bit clunky
+
+## greenDAO - 21 - Joins cont.
+
+Taken From: http://greenrobot.org/greendao/documentation/joins/
+```java
+  QueryBuilder<City> qb = cityDao.queryBuilder()
+      .where(Properties.Population.ge(1000000));
+  Join country = qb
+      .join(Properties.CountryId, Country.class);
+  Join continent = qb
+      .join(country, CountryDao.Properties.ContinentId,
+        Continent.class, ContinentDao.Properties.Id);
+  continent
+      .where(ContinentDao.Properties.Name.eq("Europe"));
+  List<City> bigEuropeanCities = qb.list();
+```
+
+## greenDAO - 22 - More On Querying
 
 * Instead of using builder.list(), you may also use listLazy() which must be manually closed due to the nature of the implementation (use listLazy().close() when you are done)
-* listLazy() is probably the best way to query data that needs to be displayed in an Android list
-* joins are finally supported as well \o/
+* listLazy() is probably the best way to query data that needs to be displayed in an Android ListView or RecyclerView
 * http://greenrobot.org/greendao/documentation/queries/
-* http://greenrobot.org/greendao/documentation/joins/
+
+## greenDAO - 23 - Migrations
+
+* greenDAO does NOT support automatic creation of migrations when schema changes occur
+* greenDAO utilizes its own subclass of SQLiteOpenHelper, namely OpenHelper, to create and update the database schema
+* It provides DevOpenHelper as a concrete implementation, which drops all tables on upgrade
+    * obviously, this is not exactly what you usually want
+* SQLiteOpenHelper manages schema versions and so does OpenHelper, use schemaVersion directive in the greedao block
+    * use ```PRAGMA user_version;``` to check your current database version (sqlite3 shell)
+    * old versions of android stored the version inside the android_metadata table
+* In order to implement database migrations, the ```onUpgrade``` method of OpenHelper needs to be overridden
 
 # [Example Code](https://github.com/SphericalElephant/android-example-greendao3)
 
-## Outlook - 1 - More Android ORMs
+## Alternatives - 1 - More Android ORMs
 
+* room (architecture components)
+* requery (-> RxJava)
+* DBFLow
+* SugarORM
 * ActiveAndroid
-    * Designed for Android
-    * Similar to what sugarorm does
-    * Very promising!
-* ORMLight - http://ormlite.com/
-    * Supports Android, is not made for Android
-* androrm - http://androrm.com/
-    * Designed for Android
-    * Uses inheritance instead of generation
-* Some more, use Google if you hadn’t enough ;)
 
 # Any Questions?
